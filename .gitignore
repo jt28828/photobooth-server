@@ -7,3 +7,6 @@ Homestead.yaml
 # Ignore generated Helper files
 _ide_helper*.php
 .phpstorm*.php
+
+# Ignore uploded file locations
+/public/uploaded

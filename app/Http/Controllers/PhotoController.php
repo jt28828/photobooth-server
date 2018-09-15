@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 use App\Photo;
+use Faker\Provider\File;
+use Illuminate\Support\Facades\Storage;
 
 class PhotoController extends BaseController
 {
@@ -37,31 +39,62 @@ class PhotoController extends BaseController
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             
-            // Unique Enough for one day of photos
-            $randomEnough = time();
-            $randomEnough = time() . '.' . $image->getClientOriginalExtension();
+            // Unique filenames
+            $filename = time() . bin2hex(random_bytes(15));
+            $filenameWithExtension = $filename . '.' . $image->getClientOriginalExtension();
 
             // Images folder
-            $folder = storage_path('/app/images');
+            $folder = base_path('public/uploaded/images/');
+
+            $completePath = $folder . $filenameWithExtension;
 
             // Save the image to disk
-            $image->move($destinationPath, $filename);
+            $image->move($folder, $filenameWithExtension);
 
-            return response();
+            $uploaderName = $request->input('name');
+
+            $photoStorageLocation = self::createDBEntry($filenameWithExtension, $uploaderName);
+
+            return response($photoStorageLocation, 201);
         }
+    }
+
+    /**
+     * Deletes an existing photo
+     */
+    public function deletePhoto(Request $request, $filename)
+    {
+        $storageAddress = 'public/uploaded/images/' . $filename . '.jpg';
+
+        $photo = Photo::whereStorageAddress($storageAddress);
+
+        if ($photo == null) {
+            return response('', 404);
+        }
+
+        // Delete the DB entry
+        $photo->delete();
+
+        // Delete the actual file
+        unlink(base_path($storageAddress));
+
+        return response('', 204);
     }
 
     /**
      * Creates db entry for the photo
      *
-     * @param string $photoName
-     * @return void
+     * @param string $filename - The filename to store in the db
+     * @param string $uploader - The name of the uploading person to attach to the photo
      */
-    public static function createDBEntry(string $photoName) : void
+    private static function createDBEntry(string $filename, string $uploader) : string
     {
-        Photo::create([
-            'name' =>
+        $filepath = 'public/uploaded/images/' . $filename;
+        $photo = Photo::create([
+            'name' => $uploader,
+            'storage_address' => $filepath,
         ]);
 
+        return $photo->storage_address;
     }
 }
