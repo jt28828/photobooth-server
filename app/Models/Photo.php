@@ -36,7 +36,8 @@ class Photo extends Model
         return [
             'name' => $this->name,
             'url' => $this->storage_address,
-            'takenAt' => $this->created_at->timestamp
+            'extension' => $this->file_extension,
+            'takenAt' => $this->created_at->timestamp,
         ];
     }
 }

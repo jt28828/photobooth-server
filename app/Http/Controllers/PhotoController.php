@@ -41,19 +41,18 @@ class PhotoController extends BaseController
             
             // Unique filenames
             $filename = time() . bin2hex(random_bytes(15));
-            $filenameWithExtension = $filename . '.' . $image->getClientOriginalExtension();
+            $extension = $image->getClientOriginalExtension();
+            $filenameWithExtension = $filename . '.' . $extension;
 
             // Images folder
             $folder = base_path('public/uploaded/images/');
-
-            $completePath = $folder . $filenameWithExtension;
 
             // Save the image to disk
             $image->move($folder, $filenameWithExtension);
 
             $uploaderName = $request->input('name');
 
-            $photoStorageLocation = self::createDBEntry($filenameWithExtension, $uploaderName);
+            $photoStorageLocation = self::createDBEntry($filename, $extension, $uploaderName);
 
             return response($photoStorageLocation, 201);
         }
@@ -64,19 +63,20 @@ class PhotoController extends BaseController
      */
     public function deletePhoto(Request $request, $filename)
     {
-        $storageAddress = 'public/uploaded/images/' . $filename . '.jpg';
+        $storageAddress = 'public/uploaded/images/' . $filename;
 
-        $photo = Photo::whereStorageAddress($storageAddress);
+        $photo = Photo::whereStorageAddress($storageAddress)->get()->first();
 
         if ($photo == null) {
             return response('', 404);
         }
 
+        $extension = $photo->file_extension;
         // Delete the DB entry
         $photo->delete();
 
         // Delete the actual file
-        unlink(base_path($storageAddress));
+        unlink(base_path($storageAddress . '.' . $extension));
 
         return response('', 204);
     }
@@ -85,16 +85,18 @@ class PhotoController extends BaseController
      * Creates db entry for the photo
      *
      * @param string $filename - The filename to store in the db
+     * @param string $extension - The filetype (.png, .jpg)
      * @param string $uploader - The name of the uploading person to attach to the photo
      */
-    private static function createDBEntry(string $filename, string $uploader) : string
+    private static function createDBEntry(string $filename, string $extension, string $uploader) : string
     {
         $filepath = 'public/uploaded/images/' . $filename;
         $photo = Photo::create([
             'name' => $uploader,
             'storage_address' => $filepath,
+            'file_extension' => $extension
         ]);
 
-        return $photo->storage_address;
+        return $photo->storage_address . '.' . $extension;
     }
 }
