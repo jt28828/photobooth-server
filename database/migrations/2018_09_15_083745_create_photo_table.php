@@ -17,6 +17,7 @@ class CreatePhotoTable extends Migration
             $table->increments('id');
             $table->string("name");
             $table->string("storage_address");
+            $table->string("file_extension");
             $table->timestamps();
         });
     }

@@ -28,6 +28,7 @@ class Photo extends Model
     protected $fillable = [
         'name',
         'storage_address',
+        'file_extension',
     ];
 
     public function format() : array
