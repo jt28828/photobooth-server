@@ -21,7 +21,7 @@ class PhotoController extends BaseController
     public function getAllPhotos(Request $request) : JsonResponse
     {
         // Get all of the photos and format them for the app
-        $photos = Photo::all()->map(function ($photo) {
+        $photos = Photo::orderBy('id', 'DESC')->get()->map(function ($photo) {
             return $photo->format();
         });
 

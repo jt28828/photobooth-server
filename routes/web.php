@@ -13,10 +13,7 @@
 
 // Get all
 $router->get('/', ['uses' => 'PhotoController@getAllPhotos']);
-
 // Add photo
 $router->post('/', ['uses' => 'PhotoController@addPhoto']);
-
-
 // Delete photo
 $router->delete('/{filename}', ['uses' => 'PhotoController@deletePhoto']);
